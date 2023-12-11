@@ -1,0 +1,61 @@
+
+---- Specifically for displaying files from the file repository, use this code:
+Declare
+  v_blob        BLOB;
+  v_mime_type   VARCHAR2(100);
+  v_file_name   VARCHAR2(100);
+  v_length      NUMBER;
+  v_raw_chunk   RAW(4096);
+  v_start       NUMBER := 1;
+  v_buffer_size BINARY_INTEGER := 4096;
+BEGIN
+  -- Retrieve BLOB content, MIME type, and file name
+  SELECT blob_content, mime_type, filename
+  INTO   v_blob, v_mime_type, v_file_name
+  FROM   cp_file_repository
+  WHERE  FILE_ID = :P35_FILE_ID;
+
+  -- Set the HTTP headers to serve the file
+  OWA_UTIL.mime_header (nvl(v_mime_type, 'application/octet'), FALSE);
+--   HTP.p('Content-Length: ' || DBMS_LOB.getlength(v_blob));
+--   HTP.p('Content-Disposition: attachment; filename="' || nvl(v_file_name, 'output') || '"');
+OWA_UTIL.mime_header(nvl(v_mime_type, 'application/octet-stream'), FALSE);
+HTP.p('Content-Disposition: attatchment; filename="' || nvl(v_file_name, 'download') || '"');
+  OWA_UTIL.http_header_close;
+
+  -- Serve the BLOB content
+  WPG_DOCLOAD.download_file(v_blob);
+
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    HTP.p('File not found.');
+  WHEN OTHERS THEN
+    HTP.p('An error occurred: ' || SQLERRM);
+END my_download_procedure;
+----------------------------------------------------------------
+
+
+---Spcifically for viewing file from RFQS table, use this code:
+
+DECLARE
+  v_blob BLOB;
+BEGIN
+  -- Fetch the BLOB content from the table
+  SELECT RFQ_FILE INTO v_blob
+  FROM FSG_UNITED_RFQS
+  WHERE ID_RFQ = :P4_id_RQF;  -- Replace PXX_ITEM_ID with your page item for RFQ ID
+
+  -- Set the MIME type for PDF files
+  OWA_UTIL.mime_header('application/pdf', FALSE);
+
+  -- Stream the BLOB content to the browser
+  WPG_DOCLOAD.download_file(v_blob);
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    HTP.p('File not found.');
+  WHEN OTHERS THEN
+    HTP.p('An error occurred: ' || SQLERRM);
+END;
+
+
+
