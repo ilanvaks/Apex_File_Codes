@@ -9,7 +9,7 @@ Declare
   v_start       NUMBER := 1;
   v_buffer_size BINARY_INTEGER := 4096;
 BEGIN
-  -- Retrieve BLOB content, MIME type, and file name
+  -- Retrieve BLOB content, MIME type, and file name, porcess before the headers in the apex page. 
   SELECT blob_content, mime_type, filename
   INTO   v_blob, v_mime_type, v_file_name
   FROM   cp_file_repository
@@ -35,7 +35,7 @@ END my_download_procedure;
 ----------------------------------------------------------------
 
 
----Spcifically for viewing file from RFQS table, use this code:
+---Spcifically for viewing file from RFQS table, use this code, process before the header:
 
 DECLARE
   v_blob BLOB;
